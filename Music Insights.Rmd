@@ -46,3 +46,11 @@ First, let's create a person table with each of the responses from the survey. T
 ```{R}
 person<-tibble(pseudonym_generator_name = survey$pseudonym_generator_name,  sex = survey$sex, )
 ```
+
+The date and time are in a format that isn't readily processable by R. In order to make it so, we need to run a parse_datetime function over the entire dataset:
+
+```{R}
+?parse_datetime
+survey$time_submitted <- as.POSIXlt(parse_datetime(survey$time_submitted, format="%m/%d/%y %H:%M"))
+survet$time_submitted[1]$min
+```
