@@ -6,7 +6,7 @@ output: html_notebook
 
 First, we need tidyverse to handle data importing and wrangling...
 
-```{r}
+```{R}
 #install.packages("tidyverse")
 
 survey <- read.csv("https://raw.githubusercontent.com/introdsci/MusicSurvey/master/music-survey.csv")
@@ -16,7 +16,7 @@ preferences <- read.csv("https://raw.githubusercontent.com/introdsci/MusicSurvey
 
 The data in the music survey table has inconsistent and verbose naming that isn't conducive to good datakeeping. We can change the column names to better represent 
 Cleaning data frame column names:
-```{r}
+```{R}
 colnames(survey)[colnames(survey)=="Timestamp"]<-"time_submitted"
 colnames(survey)[colnames(survey)=="First..we.are.going.to.create.a.pseudonym.for.you.to.keep.this.survey.anonymous..more.or.less...Which.pseudonym.generator.would.you.prefer."]<-"pseudonym_generator"
 colnames(survey)[colnames(survey)=="What.is.your.pseudonym."]<-"pseudonym"
@@ -44,13 +44,37 @@ library("dplyr")
 First, let's create a person table with each of the responses from the survey. This table should include pseudonym_generator_name, pseudonym, sex, academic_major, academic_level, and year_born:
 
 ```{R}
-person<-tibble(pseudonym_generator_name = survey$pseudonym_generator_name,  sex = survey$sex, )
+person<-tibble(pseudonym_generator = survey$pseudonym_generator,  pseudonym = survey$pseudonym, sex = survey$sex, academic_major = survey$academic_major, academic_level = survey$academic_level, year_born = survey$year_born)
+colnames(person)
+```
+
+Next, in order to store the data that we just took out, let's create a survey table that contains pseudonym, and the name, artist, and url of the person's favorite song.
+```{R}
+favorite_song<-tibble(pseudonym = survey$pseudonym, favorite_song = survey$favorite_song, favorite_song_artist = survey$favorite_song_artist, favorite_song_link = survey$favorite_song_link)
+colnames(favorite_song)
+```
+
+Our dataset contains categorical data that we want to remake into discrete data, specifically a factor. To do this, we need to access and modify each of the possible options in that factor:
+```{R}
+person$academic_level<-as_factor(person$academic_level)
+levels(person$academic_level)
+person$academic_major<-as_factor(person$academic_major)
+levels(person$academic_major)[levels(person$academic_major) == "Computer  Engineering "] <- "Computer Engineering"
+levels(person$academic_major)[levels(person$academic_major) == "Computer information systems"] <- "Computer Information Systems"
+levels(person$academic_major)
+```
+
+We want to take the table of song preferences and use the tidyverse gather function to produce a much tidier table that has the pseudonym artist_song, and rating for every single song:
+```{R}
+colnames(preferences)[colnames(preferences)=="What.was.your.pseudonym."]<-"pseudonym"
+preferences$Timestamp <- NULL
+ratings <- gather(preferences, song_name, rating, "X40.crew.Not.Enough":"Wheezer.Buddy.Holly")
 ```
 
 The date and time are in a format that isn't readily processable by R. In order to make it so, we need to run a parse_datetime function over the entire dataset:
 
 ```{R}
 ?parse_datetime
-survey$time_submitted <- as.POSIXlt(parse_datetime(survey$time_submitted, format="%m/%d/%y %H:%M"))
-survet$time_submitted[1]$min
+survey$time_submitted <- as.POSIXlt(parse_datetime(as.character(survey$time_submitted), format="%m/%d/%y %H:%M"))
+survey$time_submitted[1]$min
 ```
