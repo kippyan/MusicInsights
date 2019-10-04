@@ -1,7 +1,9 @@
 ---
 title: "Music Insights"
 author: "Olivia Lund"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 First, we need tidyverse to handle data importing and wrangling...
@@ -41,6 +43,7 @@ library(tidyverse)
 library("dplyr")
 ```
 
+
 First, let's create a person table with each of the responses from the survey. This table should include pseudonym_generator_name, pseudonym, sex, academic_major, academic_level, and year_born:
 
 ```{R}
@@ -71,10 +74,11 @@ preferences$Timestamp <- NULL
 ratings <- gather(preferences, song_name, rating, "X40.crew.Not.Enough":"Wheezer.Buddy.Holly")
 ```
 
-The date and time are in a format that isn't readily processable by R. In order to make it so, we need to run a parse_datetime function over the entire dataset:
-
+Next, we want to make a table of the musical talents, lsiting each as a separate row for each person, and combining all the different phrasings combined by talent keyword. 
 ```{R}
-?parse_datetime
-survey$time_submitted <- as.POSIXlt(parse_datetime(as.character(survey$time_submitted), format="%m/%d/%y %H:%M"))
-survey$time_submitted[1]$min
+talents <-tibble(pseudonym = survey$pseudonym, talent = survey$instrument)
+talents <-talents %>% separate_rows(talent, pseudonym, sep = ", ", convert = TRUE)
+#subset(ChickWeight, Diet==4 && Time == 21)
+talents$talent <- ifelse(grepl("piano|Piano", talents$talent), "Piano", talents$talent)
+talents$talent <- ifelse(grepl("Ukelele", talents$talent), "Ukelele", talents$talent)
 ```
