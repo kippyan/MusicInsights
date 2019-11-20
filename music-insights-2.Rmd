@@ -1,0 +1,40 @@
+---
+title: "Music Insights 2"
+author: "Olivia Lund"
+output:
+  html_document: default
+  pdf_document: default
+df_print: paged
+---
+
+This project is intended to feature predictive analysis using the caret library. I want to add another column to person ordering when they submitted their surveys from first to last, and possbly gain some insight as to factors that contribute to a person's submission time.
+As always, we need to pick our tools:
+```{R, results='hide', message=FALSE}
+  include <- function(library_name){
+    if( !(library_name %in% installed.packages()) )
+      install.packages(library_name) 
+    library(library_name, character.only=TRUE)
+  }
+include("caret")
+include("dplyr")
+include("tidyr")
+include("tidyverse")
+include("knitr")
+#purl("Music Insights.Rmd", output = "part1.r")
+#source("part1.r")
+```
+With that out of the way, we can go ahead and do the important stuff.
+
+One of the most effective ways of gathering insight about the change in a variable is by seeing how well it correlates with another one. In this case, we're seeing how well the target variable, time_submitted, correlates with every other variable. A larger value means a higher correlation.
+```{R}
+submission_model <- lm(data=person, formula = as.Date(person$time_submitted) ~ person$sex + person$year_born + person$academic_level + person$academic_major)
+submission_model
+```
+As we can see from these results, none of the variables correlate exceptionally well, with academic major being the strongest negative correlation. 
+
+```{R}
+#sample_selection = createDataPartition(person$time_submitted, p = 0.70, list = FALSE)
+#train <- person[sample_selection, ]
+#test <- person[-sample_selection, ]
+```
+I was unable to get line 34 to work with an error "Error in names(dn) <- dnn : 'names' attribute [44] must be the same length as the vector [9]" 

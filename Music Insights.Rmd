@@ -1,9 +1,8 @@
 ---
-title: "Music Insights"
-author: "Olivia Lund"
-output:
-  html_document:
-    df_print: paged
+  title: "Music Insights"
+  author: "Olivia Lund"
+  output: html_document
+  df_print: paged
 ---
 
 First, we need tidyverse to handle data importing and wrangling...
@@ -44,10 +43,10 @@ library("dplyr")
 ```
 
 
-First, let's create a person table with each of the responses from the survey. This table should include pseudonym_generator_name, pseudonym, sex, academic_major, academic_level, and year_born:
+First, let's create a person table with each of the responses from the survey. This table should include pseudonym_generator_name, pseudonym, sex, academic_major, academic_level, year_born, and because we have to store it somewhere, the time they submitted their survey:
 
 ```{R}
-person<-tibble(pseudonym_generator = survey$pseudonym_generator,  pseudonym = survey$pseudonym, sex = survey$sex, academic_major = survey$academic_major, academic_level = survey$academic_level, year_born = survey$year_born)
+person<-tibble(pseudonym_generator = survey$pseudonym_generator,  pseudonym = survey$pseudonym, sex = survey$sex, academic_major = survey$academic_major, academic_level = survey$academic_level, year_born = survey$year_born, time_submitted = survey$time_submitted)
 colnames(person)
 ```
 
@@ -72,6 +71,7 @@ We want to take the table of song preferences and use the tidyverse gather funct
 colnames(preferences)[colnames(preferences)=="What.was.your.pseudonym."]<-"pseudonym"
 preferences$Timestamp <- NULL
 ratings <- gather(preferences, song_name, rating, "X40.crew.Not.Enough":"Wheezer.Buddy.Holly")
+colnames(ratings)
 ```
 
 Next, we want to make a table of the musical talents, lsiting each as a separate row for each person, and combining all the different phrasings combined by talent keyword. 
@@ -81,4 +81,38 @@ talents <-talents %>% separate_rows(talent, pseudonym, sep = ", ", convert = TRU
 #subset(ChickWeight, Diet==4 && Time == 21)
 talents$talent <- ifelse(grepl("piano|Piano", talents$talent), "Piano", talents$talent)
 talents$talent <- ifelse(grepl("Ukelele", talents$talent), "Ukelele", talents$talent)
+colnames(talents)
+```
+
+#```{R}
+#talents$talent
+#ggplot(talents, aes(x = talents$talent)) + geom_histogram()
+#```
+
+Some of our data features duplicates. We could resolve this by 
+
+```{R}
+temp = inner_join(ratings, person, by="pseudonym")
+head(temp)
+first <- min(ratings$time_submitted[temp$pseudonym=="Angel Angel"])
+ratings <- ratings %>% filter(!(temp$pseudonym=="Angel Angel" & temp$time_submitted!=first))
+first <- min(ratings$time_rated[temp$pseudonym=="Mission Theory"])
+#ratings <- ratings %>% filter(!(temp$pseudonym=="Mission Theory" & temp$time_submitted!=first))
+```
+
+
+```{R}
+#test<=ratings[!(ratings$name %in% ratings$name[ratings$rem == 1]), ]
+
+test<-inner_join(favorite_song, ratings, by="pseudonym")
+temp = tibble(test$pseudonym, paste(test$favorite_song_artist, test$favorite_song), test$song_name, test$rating)
+test$song_name <- str_replace_all(test$song_name, '[[:punct:]]', " ")
+test$song_name <- str_replace_all(test$song_name, "We ll", "We'll")
+test$song_name <- str_replace_all(test$song_name, "Can t", "Can't")
+test$song_name <- str_replace_all(test$song_name, "She s", "She's")
+
+```
+
+```{R}
+person$time_submitted <- as.POSIXlt(parse_datetime(as.character(person$time_submitted), format = "%m/%d/%y %H:%M"))
 ```
