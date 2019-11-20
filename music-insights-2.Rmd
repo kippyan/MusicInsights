@@ -33,7 +33,7 @@ submission_model
 As we can see from these results, none of the variables correlate exceptionally well, with academic major being the strongest negative correlation. 
 
 ```{R}
-#sample_selection = createDataPartition(person$time_submitted, p = 0.70, list = FALSE)
+sample_selection = createDataPartition(person$time_submitted, p = 0.75, list = FALSE)
 #train <- person[sample_selection, ]
 #test <- person[-sample_selection, ]
 ```
