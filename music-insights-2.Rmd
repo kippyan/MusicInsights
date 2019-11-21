@@ -7,7 +7,8 @@ output:
 df_print: paged
 ---
 
-This project is intended to feature predictive analysis using the caret library. I want to add another column to person ordering when they submitted their surveys from first to last, and possbly gain some insight as to factors that contribute to a person's submission time.
+This project is intended to feature predictive analysis using the caret library. I want to analyze the birth years of the students and try to find how effectively we can use other attributes of the person table to predict birth year.
+
 As always, we need to pick our tools:
 ```{R, results='hide', message=FALSE}
   include <- function(library_name){
@@ -25,16 +26,29 @@ include("knitr")
 ```
 With that out of the way, we can go ahead and do the important stuff.
 
-One of the most effective ways of gathering insight about the change in a variable is by seeing how well it correlates with another one. In this case, we're seeing how well the target variable, time_submitted, correlates with every other variable. A larger value means a higher correlation.
+I would have liked to include academic_major in this analysis, but due to an issue in which the one computer engineering major would only appear in the test data causing the training model to get confused about the factors present, it had to be omitted. In addition, somehow one student's birth year was NA and had to be omitted for this analysis.
 ```{R}
-submission_model <- lm(data=person, formula = as.Date(person$time_submitted) ~ person$sex + person$year_born + person$academic_level + person$academic_major)
-submission_model
+person <- subset(person, !is.na(person$year_born))
+sample_selection <- createDataPartition(person, p = 0.75, list = FALSE)
+train <- person[sample_selection, ]
+test <- person[-sample_selection, ]
 ```
-As we can see from these results, none of the variables correlate exceptionally well, with academic major being the strongest negative correlation. 
 
+
+One of the most effective ways of gathering insight about the change in a variable is by seeing how well it correlates with another one. In this case, we're seeing how well the target variable, birth_year, correlates with every other variable. A larger value means a higher correlation.
 ```{R}
-sample_selection = createDataPartition(person$time_submitted, p = 0.75, list = FALSE)
-#train <- person[sample_selection, ]
-#test <- person[-sample_selection, ]
+submission_model <- lm(data=train, formula = person$year_born ~ person$sex + person$academic_level)
+summary(submission_model)
 ```
-I was unable to get line 34 to work with an error "Error in names(dn) <- dnn : 'names' attribute [44] must be the same length as the vector [9]" 
+As we can see from these results, none of the variables correlate exceptionally well, with academic major being the strongest correlation. 
+
+Now, we can use the predictive model we trained on 75% of the data earlier to make a prediction for the birth year of the other 25%. 
+```{R}
+predictions <- submission_model %>% predict(test)
+predictions
+#as.Date(predictions,origin = "1960-10-01")
+```
+The results of this testing model produce fairly reasonable results. These results have quirks to them, like how whereas the training data was integer years, these results are all decimal values. 
+
+
+Further analysis has proven difficult because of syntax errors in analysis code. This project will have to stop here for now, and hopefully will be made up in the second part of the portfolio project.
